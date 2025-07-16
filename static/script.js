@@ -14,12 +14,59 @@ function login() {
   .then(data => {
     if (data.access) {
       token = data.access;
+      localStorage.setItem("access", token);  // ✅ Save to localStorage
       document.getElementById("login-status").textContent = "✅ Logged in!";
     } else {
       document.getElementById("login-status").textContent = "❌ Login failed!";
     }
   });
 }
+
+document.getElementById("register-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const username = document.getElementById("reg-username").value;
+  const password = document.getElementById("reg-password").value;
+
+  fetch("/api/users/register/", {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+      if (data.message) {
+          document.getElementById("register-message").textContent = "✅ Registered successfully!";
+      } else {
+          document.getElementById("register-message").textContent = "❌ " + JSON.stringify(data);
+      }
+  });
+});
+
+document.getElementById("view-saved-btn").addEventListener("click", function () {
+  const token = localStorage.getItem("access");
+  fetch("/api/news/saved/", {
+      headers: {
+          "Authorization": "Bearer " + token
+      }
+  })
+  .then(res => res.json())
+  .then(data => {
+      const savedDiv = document.getElementById("saved-news-container");
+      savedDiv.innerHTML = "<h3>📌 Saved Articles:</h3>";
+      data.forEach(article => {
+          savedDiv.innerHTML += `
+              <div>
+                  <h4>${article.title}</h4>
+                  <a href="${article.url}" target="_blank">Read more</a>
+                  <p>${article.summary}</p>
+                  <hr/>
+              </div>
+          `;
+      });
+  });
+});
 
 function getLatestNews() {
   fetch("/api/news/latest/", {
