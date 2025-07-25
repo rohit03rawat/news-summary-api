@@ -69,13 +69,24 @@ document.getElementById("view-saved-btn").addEventListener("click", function () 
 });
 
 function getLatestNews() {
+  const loader = document.getElementById("loader");
+  const container = document.getElementById("news-container");
+
+  loader.style.display = "block";  // Show loader
+  container.innerHTML = '';        // Clear old content if needed
+
   fetch("/api/news/latest/", {
     headers: {
       'Authorization': `Bearer ${token}`
     }
   })
   .then(res => res.json())
-  .then(data => displayNews(data));
+  .then(data => {
+    displayNews(data);
+  })
+  .finally(() => {
+    loader.style.display = "none"; // Hide loader after fetch
+  });
 }
 
 function searchNews() {
