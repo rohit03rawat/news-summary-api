@@ -24,7 +24,7 @@ This is a Django-based RESTful API that fetches the latest news using external A
 - **AI Integration**: `google-generativeai`
 - **Deployment**: Render
 - **Authentication**: JWT-based
-- **Database**: SQLite (local)
+- **Database**: PostgreSQL
 
 ---
 
