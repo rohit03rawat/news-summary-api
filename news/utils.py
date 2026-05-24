@@ -1,8 +1,6 @@
 import requests
 from django.conf import settings
-import google.generativeai as genai
-
-
+from google import genai
 
 def fetch_latest_news():
     url = 'https://newsapi.org/v2/top-headlines'
@@ -30,14 +28,16 @@ def fetch_latest_news():
     return news_list
 
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
-
-model = genai.GenerativeModel('gemini-2.0-flash')
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
 def summarize_text(text):
-    prompt = f"Summarize this news article briefly:\n\n{text}"
-    response = model.generate_content(prompt)
-    return response.text.strip()
+    try:
+        prompt = f"Summarize this news article briefly:\n\n{text}"
+        response = client.models.generate_content(model='gemini-3.5-flash',
+        contents=prompt)
+        return response.text.strip()
+    except Exception as e:
+        print(f'error in summarise : {e}')
 
 def fetch_news_by_query(query):
     url = 'https://newsapi.org/v2/everything'
