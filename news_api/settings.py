@@ -15,6 +15,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
 NEWS_API_KEY = os.getenv('NEWS_API_KEY')
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
