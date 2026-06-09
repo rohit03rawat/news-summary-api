@@ -1,5 +1,5 @@
 // frontend/script.js
-let token = '';
+let token = "";
 
 function login() {
   const username = document.getElementById("username").value;
@@ -7,55 +7,62 @@ function login() {
 
   fetch("/api/token/", {
     method: "POST",
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.access) {
-      token = data.access;
-      localStorage.setItem("access", token);  // ✅ Save to localStorage
-      document.getElementById("login-status").textContent = "✅ Logged in!";
-    } else {
-      document.getElementById("login-status").textContent = "❌ Login failed!";
-    }
-  });
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.access) {
+        token = data.access;
+        localStorage.setItem("access", token); // ✅ Save to localStorage
+        document.getElementById("login-status").textContent = "✅ Logged in!";
+      } else {
+        document.getElementById("login-status").textContent =
+          "❌ Login failed!";
+      }
+    });
 }
 
-document.getElementById("register-form").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const username = document.getElementById("reg-username").value;
-  const password = document.getElementById("reg-password").value;
+document
+  .getElementById("register-form")
+  .addEventListener("submit", function (e) {
+    e.preventDefault();
+    const username = document.getElementById("reg-username").value;
+    const password = document.getElementById("reg-password").value;
 
-  fetch("/api/users/register/", {
+    fetch("/api/users/register/", {
       method: "POST",
       headers: {
-          "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, password })
-  })
-  .then(res => res.json())
-  .then(data => {
-      if (data.message) {
-          document.getElementById("register-message").textContent = "✅ Registered successfully!";
-      } else {
-          document.getElementById("register-message").textContent = "❌ " + JSON.stringify(data);
-      }
+      body: JSON.stringify({ username, password }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.message) {
+          document.getElementById("register-message").textContent =
+            "✅ Registered successfully!";
+        } else {
+          document.getElementById("register-message").textContent =
+            "❌ " + JSON.stringify(data);
+        }
+      });
   });
-});
 
-document.getElementById("view-saved-btn").addEventListener("click", function () {
-  const token = localStorage.getItem("access");
-  fetch("/api/news/saved/", {
+document
+  .getElementById("view-saved-btn")
+  .addEventListener("click", function () {
+    const token = localStorage.getItem("access");
+    fetch("/api/news/saved/", {
       headers: {
-          "Authorization": "Bearer " + token
-      }
-  })
-  .then(res => res.json())
-  .then(data => {
-      const savedDiv = document.getElementById("saved-news-container");
-      savedDiv.innerHTML = "<h3>📌 Saved Articles:</h3>";
-      data.forEach(article => {
+        Authorization: "Bearer " + token,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const savedDiv = document.getElementById("saved-news-container");
+        savedDiv.innerHTML = "<h3>📌 Saved Articles:</h3>";
+        data.forEach((article) => {
           savedDiv.innerHTML += `
               <div>
                   <h4>${article.title}</h4>
@@ -64,57 +71,70 @@ document.getElementById("view-saved-btn").addEventListener("click", function () 
                   <hr/>
               </div>
           `;
+        });
       });
   });
-});
 
 function getLatestNews() {
   const loader = document.getElementById("loader");
   const container = document.getElementById("news-container");
+  const button = document.getElementById("latest-news-btn");
 
-  loader.style.display = "block";  // Show loader
-  container.innerHTML = '';        // Clear old content if needed
+  // Disable button immediately
+  button.disabled = true;
+  button.textContent = "Loading...";
+
+  loader.style.display = "block";
+  container.innerHTML = "";
 
   fetch("/api/news/latest/", {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
-  .then(res => res.json())
-  .then(data => {
-    displayNews(data);
-  })
-  .finally(() => {
-    loader.style.display = "none"; // Hide loader after fetch
-  });
+    .then((res) => res.json())
+    .then((data) => {
+      displayNews(data);
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Failed to fetch news");
+    })
+    .finally(() => {
+      loader.style.display = "none";
+
+      // Re-enable button
+      button.disabled = false;
+      button.textContent = "Get Latest News";
+    });
 }
 
 function searchNews() {
   const term = document.getElementById("searchTerm").value;
   fetch(`/api/news/search/?q=${term}`, {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
-  .then(res => res.json())
-  .then(data => displayNews(data));
+    .then((res) => res.json())
+    .then((data) => displayNews(data));
 }
 
 function saveNews(newsItem) {
   fetch("/api/news/save/", {
     method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(newsItem)
+    body: JSON.stringify(newsItem),
   }).then(() => alert("✅ News saved!"));
 }
 
 function displayNews(newsList) {
   const container = document.getElementById("news-container");
-  container.innerHTML = '';
-  newsList.forEach(news => {
+  container.innerHTML = "";
+  newsList.forEach((news) => {
     const card = document.createElement("div");
     card.className = "news-card";
     card.innerHTML = `
