@@ -7,7 +7,7 @@ from .models import SavedNews
 from .serializers import SavedNewsSerializer
 from .utils import fetch_latest_news, summarize_text, fetch_news_by_query
 from django.shortcuts import render
-
+from django.core.cache import cache
 
 class SavedNewsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -31,13 +31,29 @@ class LatestNewsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
+        cached_news = cache.get("latest_news")
+
+        if cached_news:
+            print("Serving from cache")
+            return Response(cached_news)
+
+        print("Generating fresh summaries")
+
         raw_news = fetch_latest_news()
 
         summarized_news = []
+
         for article in raw_news:
             summary = summarize_text(article["summary"])
             article["summary"] = summary
             summarized_news.append(article)
+
+        cache.set(
+            "latest_news",
+            summarized_news,
+            timeout=300
+        )
 
         return Response(summarized_news)
     

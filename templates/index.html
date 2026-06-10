@@ -22,14 +22,18 @@
       <button type="submit">Register</button>
     </form>
 
+    {% comment %}
     <p id="register-message"></p>
+    {% endcomment %}
 
     <div class="auth-section">
       <h2>Login</h2>
       <input type="text" id="username" placeholder="Username" />
       <input type="password" id="password" placeholder="Password" />
       <button onclick="login()">Login</button>
+      {% comment %}
       <p id="login-status"></p>
+      {% endcomment %}
     </div>
 
     <button id="view-saved-btn">View Saved News</button>

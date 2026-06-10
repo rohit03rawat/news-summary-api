@@ -15,10 +15,12 @@ function login() {
       if (data.access) {
         token = data.access;
         localStorage.setItem("access", token); // ✅ Save to localStorage
-        document.getElementById("login-status").textContent = "✅ Logged in!";
+        alert("Logged IN");
+        // document.getElementById("login-status").textContent = "✅ Logged in!";
       } else {
-        document.getElementById("login-status").textContent =
-          "❌ Login failed!";
+        // document.getElementById("login-status").textContent =
+        //   "❌ Login failed!";
+        alert("Login Failed");
       }
     });
 }
@@ -39,13 +41,15 @@ document
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.message) {
-          document.getElementById("register-message").textContent =
-            "✅ Registered successfully!";
-        } else {
-          document.getElementById("register-message").textContent =
-            "❌ " + JSON.stringify(data);
-        }
+        alert(data.message);
+
+        // if (data.message) {
+        //   document.getElementById("register-message").textContent =
+        //     "✅ Registered successfully!";
+        // } else {
+        //   document.getElementById("register-message").textContent =
+        //     "❌ " + JSON.stringify(data);
+        // }
       });
   });
 
