@@ -1,5 +1,5 @@
 // frontend/script.js
-let token = "";
+let token = localStorage.getItem("access") || "";
 
 function login() {
   const username = document.getElementById("username").value;
