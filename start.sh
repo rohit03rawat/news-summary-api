@@ -1,3 +1,5 @@
 #!/bin/bash
 
-gunicorn news_api.wsgi:application --bind 0.0.0.0:$PORT
+python -m celery -A news_api worker -l info &
+
+python health.py
