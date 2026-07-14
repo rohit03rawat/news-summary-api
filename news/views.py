@@ -9,6 +9,9 @@ from .utils import fetch_latest_news, summarize_text, fetch_news_by_query
 from django.shortcuts import render
 from django.core.cache import cache
 from .tasks import generate_latest_news, generate_search_news
+import requests
+
+WORKER_URL = 'https://news-summary-api-1.onrender.com'
 
 class SavedNewsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -88,4 +91,6 @@ class SearchNewsView(APIView):
             "status": "processing"})
 
 def frontend(request):
+    response = requests.get(WORKER_URL, timeout=2)
+    print("second service pinged")
     return render(request, 'index.html')
