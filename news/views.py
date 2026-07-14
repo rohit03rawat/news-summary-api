@@ -92,5 +92,6 @@ class SearchNewsView(APIView):
 
 def frontend(request):
     response = requests.get(WORKER_URL, timeout=2)
-    print("second service pinged")
+    print("second service pinged -", response)
     return render(request, 'index.html')
+
