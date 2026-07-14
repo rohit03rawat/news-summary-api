@@ -1,5 +1,5 @@
 // frontend/script.js
-let token = "";
+let token = localStorage.getItem("access") || "";
 
 function login() {
   const username = document.getElementById("username").value;
@@ -79,17 +79,18 @@ document
       });
   });
 
-function getLatestNews() {
+function getLatestNews(isPolling = false) {
   const loader = document.getElementById("loader");
   const container = document.getElementById("news-container");
   const button = document.getElementById("latest-news-btn");
 
-  // Disable button immediately
-  button.disabled = true;
-  button.textContent = "Loading...";
-
-  loader.style.display = "block";
-  container.innerHTML = "";
+  // Only reset UI on the first request
+  if (!isPolling) {
+    button.disabled = true;
+    button.textContent = "Loading...";
+    loader.style.display = "block";
+    container.innerHTML = "";
+  }
 
   fetch("/api/news/latest/", {
     headers: {
@@ -98,16 +99,25 @@ function getLatestNews() {
   })
     .then((res) => res.json())
     .then((data) => {
+      // Backend is still generating summaries
+      if (data.status === "processing") {
+        console.log("Generating summaries...");
+        setTimeout(() => getLatestNews(true), 2000);
+        return;
+      }
+
+      // News is ready
       displayNews(data);
+
+      loader.style.display = "none";
+      button.disabled = false;
+      button.textContent = "Get Latest News";
     })
     .catch((err) => {
       console.error(err);
       alert("Failed to fetch news");
-    })
-    .finally(() => {
-      loader.style.display = "none";
 
-      // Re-enable button
+      loader.style.display = "none";
       button.disabled = false;
       button.textContent = "Get Latest News";
     });

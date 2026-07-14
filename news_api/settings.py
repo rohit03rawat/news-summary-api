@@ -24,6 +24,8 @@ REDIS_URL = os.getenv(
     "REDIS_URL",
     "redis://127.0.0.1:6379/1"
 )
+CELERY_BROKER_URL = REDIS_URL
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

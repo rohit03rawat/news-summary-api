@@ -8,6 +8,7 @@ from .serializers import SavedNewsSerializer
 from .utils import fetch_latest_news, summarize_text, fetch_news_by_query
 from django.shortcuts import render
 from django.core.cache import cache
+from .tasks import generate_latest_news, generate_search_news
 
 class SavedNewsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -31,31 +32,29 @@ class LatestNewsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
+        
         cached_news = cache.get("latest_news")
 
         if cached_news:
             print("Serving from cache")
             return Response(cached_news)
 
+        status = cache.get('news_status')
+
         print("Generating fresh summaries")
+        
+        if status == 'processing':
+            return Response({'status' : 'processing'})
+        
+        if status == 'failed' :
+            return self.response({'status' : 'failed' , "message": "Unable to generate summaries."})
+        
+        cache.set("news_status", 'processing')
+        
+        generate_latest_news.delay()
 
-        raw_news = fetch_latest_news()
-
-        summarized_news = []
-
-        for article in raw_news:
-            summary = summarize_text(article["summary"])
-            article["summary"] = summary
-            summarized_news.append(article)
-
-        cache.set(
-            "latest_news",
-            summarized_news,
-            timeout=300
-        )
-
-        return Response(summarized_news)
+        return Response({
+            "status": "processing"})
     
 class SearchNewsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -65,9 +64,28 @@ class SearchNewsView(APIView):
         if not query:
             return Response({"error": "Search term (q) is required."}, status=400)
 
-        news = fetch_news_by_query(query)
-        return Response(news)
+        cached_query_news = cache.get('query_news')
 
+        if cached_query_news:
+            print('serving from cache')
+            return Response(cached_query_news)
+        
+        status = cache.get('query_news_status')
+
+        print("Generating fresh summaries")
+        
+        if status == 'processing':
+            return Response({'status' : 'processing'})
+        
+        if status == 'failed' :
+            return self.response({'status' : 'failed' , "message": "Unable to generate summaries."})
+        
+        cache.set("query_news_status", 'processing')
+        
+        generate_search_news.delay()
+
+        return Response({
+            "status": "processing"})
 
 def frontend(request):
     return render(request, 'index.html')
