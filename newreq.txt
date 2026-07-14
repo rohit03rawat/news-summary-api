@@ -1,0 +1,12 @@
+celery
+flask
+dj-database-url
+Django
+django-redis
+djangorestframework
+djangorestframework_simplejwt
+Flask
+google-genai
+gunicorn
+redis
+python-dotenv
