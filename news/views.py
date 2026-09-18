@@ -9,9 +9,6 @@ from .utils import fetch_latest_news, summarize_text, fetch_news_by_query
 from django.shortcuts import render
 from django.core.cache import cache
 from .tasks import generate_latest_news, generate_search_news
-import requests
-
-WORKER_URL = 'https://news-summary-api-1.onrender.com'
 
 class SavedNewsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -42,15 +39,18 @@ class LatestNewsView(APIView):
             print("Serving from cache")
             return Response(cached_news)
 
-        status = cache.get('news_status')
+        news_status = cache.get('news_status')
 
         print("Generating fresh summaries")
         
-        if status == 'processing':
+        if news_status == 'processing':
             return Response({'status' : 'processing'})
         
-        if status == 'failed' :
-            return self.response({'status' : 'failed' , "message": "Unable to generate summaries."})
+        if news_status == 'failed':
+            return Response(
+                {'status': 'failed', "message": "Unable to generate summaries."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         
         cache.set("news_status", 'processing')
         
@@ -67,31 +67,42 @@ class SearchNewsView(APIView):
         if not query:
             return Response({"error": "Search term (q) is required."}, status=400)
 
-        cached_query_news = cache.get('query_news')
+        cache_key = f'query_news:{query.strip().lower()}'
+        status_key = f'{cache_key}:status'
+        cached_query_news = cache.get(cache_key)
 
         if cached_query_news:
             print('serving from cache')
             return Response(cached_query_news)
         
-        status = cache.get('query_news_status')
+        query_status = cache.get(status_key)
 
         print("Generating fresh summaries")
         
-        if status == 'processing':
+        if query_status == 'processing':
             return Response({'status' : 'processing'})
         
-        if status == 'failed' :
-            return self.response({'status' : 'failed' , "message": "Unable to generate summaries."})
+        if query_status == 'failed':
+            return Response(
+                {'status': 'failed', "message": "Unable to generate summaries."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         
-        cache.set("query_news_status", 'processing')
+        cache.set(status_key, 'processing')
         
-        generate_search_news.delay()
+        generate_search_news.delay(query)
 
         return Response({
             "status": "processing"})
 
 def frontend(request):
-    response = requests.get(WORKER_URL, timeout=2)
-    print("second service pinged -", response)
     return render(request, 'index.html')
 
+# def frontend(request):
+#     try:
+#         response = requests.get(WORKER_URL, timeout=2)
+#         print("Second service pinged:", response.status_code)
+#     except requests.RequestException as e:
+#         print("Worker not reachable:", e)
+
+#     return render(request, "index.html")

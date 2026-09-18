@@ -39,15 +39,16 @@ def generate_search_news(query):
                 article["summary"] = summary
                 summarized_query_news.append(article)
                   
+            cache_key = f'query_news:{query.strip().lower()}'
             cache.set(
-                "query_news",
+                cache_key,
                 summarized_query_news,
                 timeout=300
             )
            
-            cache.set('query_news_status' , 'success')
+            cache.set(f'{cache_key}:status', 'success')
 
 
 
     except Exception:
-            cache.set('query_news_status', 'failed')
+            cache.set(f'query_news:{query.strip().lower()}:status', 'failed')

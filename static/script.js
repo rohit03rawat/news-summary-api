@@ -123,15 +123,29 @@ function getLatestNews(isPolling = false) {
     });
 }
 
-function searchNews() {
+function searchNews(isPolling = false) {
   const term = document.getElementById("searchTerm").value;
-  fetch(`/api/news/search/?q=${term}`, {
+  if (!term.trim()) {
+    return;
+  }
+
+  fetch(`/api/news/search/?q=${encodeURIComponent(term)}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   })
     .then((res) => res.json())
-    .then((data) => displayNews(data));
+    .then((data) => {
+      if (data.status === "processing") {
+        setTimeout(() => searchNews(true), 2000);
+        return;
+      }
+      if (data.status === "failed") {
+        alert(data.message || "Failed to search news");
+        return;
+      }
+      displayNews(data);
+    });
 }
 
 function saveNews(newsItem) {
