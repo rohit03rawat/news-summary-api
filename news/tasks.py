@@ -2,53 +2,46 @@ from celery import shared_task
 from .utils import fetch_latest_news, summarize_text, fetch_news_by_query
 from django.core.cache import cache
 
+def build_latest_news():
+    summarized_news = []
+    for article in fetch_latest_news():
+        article["summary"] = summarize_text(article["summary"])
+        summarized_news.append(article)
+    return summarized_news
+
+
+def build_search_news(query):
+    summarized_news = []
+    for article in fetch_news_by_query(query):
+        article["summary"] = summarize_text(article["summary"])
+        summarized_news.append(article)
+    return summarized_news
+
+
+def _set_cache(key, value, timeout=None):
+    try:
+        cache.set(key, value, timeout=timeout)
+    except Exception:
+        pass
+
+
 @shared_task
 def generate_latest_news():
-
     try:
-
-        raw_news = fetch_latest_news()
-
-        summarized_news = []
-
-        for article in raw_news:
-                summary = summarize_text(article["summary"])
-                article["summary"] = summary
-                summarized_news.append(article)
-
-        cache.set(
-                "latest_news",
-                summarized_news,
-                timeout=300
-            )
-        cache.set('news_status' , 'success')
+        summarized_news = build_latest_news()
+        _set_cache("latest_news", summarized_news, timeout=300)
+        _set_cache("news_status", "success")
 
     except Exception:
-            cache.set("news_status", "failed")
+        _set_cache("news_status", "failed")
 
 @shared_task
 def generate_search_news(query):
-      
     try:
-            query_news = fetch_news_by_query(query)
-
-            summarized_query_news = []
-
-            for article in query_news:
-                summary = summarize_text(article["summary"])
-                article["summary"] = summary
-                summarized_query_news.append(article)
-                  
-            cache_key = f'query_news:{query.strip().lower()}'
-            cache.set(
-                cache_key,
-                summarized_query_news,
-                timeout=300
-            )
-           
-            cache.set(f'{cache_key}:status', 'success')
-
-
-
+        summarized_news = build_search_news(query)
+        cache_key = f'query_news:{query.strip().lower()}'
+        _set_cache(cache_key, summarized_news, timeout=300)
+        _set_cache(f'{cache_key}:status', 'success')
     except Exception:
-            cache.set(f'query_news:{query.strip().lower()}:status', 'failed')
+        cache_key = f'query_news:{query.strip().lower()}'
+        _set_cache(f'{cache_key}:status', 'failed')

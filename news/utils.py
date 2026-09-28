@@ -7,6 +7,9 @@ from django.conf import settings
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
 def summarize_text(text):
+
+    """Summarizes the given text using the Gemini API."""
+    
     try:
         prompt = f"Summarize this news article briefly:\n\n{text}"
         response = client.models.generate_content(model='gemini-3.1-flash-lite',
@@ -17,6 +20,9 @@ def summarize_text(text):
         return "summary unavailable - Daily limit reached"
 
 def fetch_latest_news():
+
+    """Fetches the latest news articles from the News API."""
+
     url = 'https://newsapi.org/v2/top-headlines'
     params = {
         'country': 'us',
@@ -42,6 +48,9 @@ def fetch_latest_news():
     return news_list
 
 def fetch_news_by_query(query):
+
+    """Fetches news articles based on a search query from the News API."""
+    
     url = 'https://newsapi.org/v2/everything'
     params = {
         'q': query,
